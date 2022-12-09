@@ -1,3 +1,4 @@
+#[cfg(test)]
 const OFFSET: u8 = 48;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
