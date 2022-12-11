@@ -11,20 +11,27 @@ pub struct Monkey {
 }
 
 impl Monkey {
-    pub fn throw(&self, stress_reduction: bool) -> Option<(MonkeyID, u32)> {
+    pub fn throw(&self) -> Option<(MonkeyID, u32)> {
         let Some(item) = self.items.borrow_mut().pop_front() else {return None;};
 
         self.inspect_count.replace_with(|&mut old| old + 1);
 
-        let new_item = if stress_reduction {
-            (self.operation)(item) / 3
-        } else {
-            (self.operation)(item)
-        };
+        let new_item = (self.operation)(item) / 3;
 
         let monkey_id = (self.test)(new_item as usize);
-        println!("item={item}, new_item={new_item}, monkey_id={monkey_id}");
+
         Some((monkey_id, new_item))
+    }
+
+    // println!("item={item}, new_item={new_item}, monkey_id={monkey_id}");
+
+    pub fn throw_p2(&self) -> Option<(MonkeyID, u32)> {
+        let Some(item) = self.items.borrow_mut().pop_front() else {return None;};
+        self.inspect_count.replace_with(|old| *old + 1);
+        let new_item = (self.operation)(item);
+        let pass_to = (self.test)(new_item as usize);
+        println!("\titem={item}, new_item={new_item}, pass_to={pass_to}");
+        Some((pass_to, new_item))
     }
 
     pub fn catch(&self, item: u32) {
@@ -64,10 +71,10 @@ fn parse_operation(input: &str) -> Box<dyn Fn(u32) -> u32> {
     }
 
     match value {
-        "old" => Box::new(|x| x.overflowing_mul(x).0),
+        "old" => Box::new(|x| x * x),
         _ => {
             let value = value.parse::<u32>().unwrap();
-            Box::new(move |x| x.overflowing_mul(value).0)
+            Box::new(move |x| x * value)
         }
     }
 }
@@ -129,7 +136,7 @@ pub fn parse_input(input: &str) -> Vec<Monkey> {
 pub fn part1(input: &[Monkey]) -> u32 {
     for _ in 0..20 {
         input.iter().for_each(|monkey| {
-            while let Some((monkey_id, item)) = monkey.throw(true) {
+            while let Some((monkey_id, item)) = monkey.throw() {
                 input[monkey_id].catch(item);
             }
         })
@@ -147,13 +154,15 @@ pub fn part1(input: &[Monkey]) -> u32 {
 
 #[aoc(day11, part2)]
 pub fn part2(input: &[Monkey]) -> u32 {
-    let modulo = input.iter().map(|monkey| monkey.div).product::<usize>();
+    let modulo = input.iter().fold(1, |acc, monkey| acc * monkey.div) as u32;
     println!("modulo to destress is : {modulo}");
     for i in 0..1000 {
         input.iter().enumerate().for_each(|(index, monkey)| {
             println!("ROUND: {}, monkey{index}: ", i + 1);
-            while let Some((monkey_id, item)) = monkey.throw(false) {
-                input[monkey_id].catch(item % modulo as u32);
+            while let Some((monkey_id, item)) = monkey.throw_p2() {
+                let destressed = item % modulo;
+                println!("\t\titem={item}, mod={modulo}, destressed={destressed}");
+                input[monkey_id].catch(destressed);
             }
         });
 
