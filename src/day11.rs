@@ -3,15 +3,15 @@ use std::{cell::RefCell, collections::VecDeque, str::Lines};
 type MonkeyID = usize;
 
 pub struct Monkey {
-    items: RefCell<VecDeque<u32>>,
-    operation: Box<dyn Fn(u32) -> u32>,
+    items: RefCell<VecDeque<u64>>,
+    operation: Box<dyn Fn(u64) -> u64>,
     test: Box<dyn Fn(usize) -> usize>,
-    inspect_count: RefCell<u32>,
+    inspect_count: RefCell<u64>,
     div: usize,
 }
 
 impl Monkey {
-    pub fn throw(&self) -> Option<(MonkeyID, u32)> {
+    pub fn throw(&self) -> Option<(MonkeyID, u64)> {
         let Some(item) = self.items.borrow_mut().pop_front() else {return None;};
 
         self.inspect_count.replace_with(|&mut old| old + 1);
@@ -25,35 +25,34 @@ impl Monkey {
 
     // println!("item={item}, new_item={new_item}, monkey_id={monkey_id}");
 
-    pub fn throw_p2(&self) -> Option<(MonkeyID, u32)> {
+    pub fn throw_p2(&self) -> Option<(MonkeyID, u64)> {
         let Some(item) = self.items.borrow_mut().pop_front() else {return None;};
         self.inspect_count.replace_with(|old| *old + 1);
         let new_item = (self.operation)(item);
         let pass_to = (self.test)(new_item as usize);
-        println!("\titem={item}, new_item={new_item}, pass_to={pass_to}");
         Some((pass_to, new_item))
     }
 
-    pub fn catch(&self, item: u32) {
+    pub fn catch(&self, item: u64) {
         self.items.borrow_mut().push_back(item);
     }
 }
 
-fn parse_starting_items(line: &str) -> VecDeque<u32> {
+fn parse_starting_items(line: &str) -> VecDeque<u64> {
     let mut ns = vec![];
     line.split(":")
         .skip(1)
         .map(|n| {
             n.split(",")
-                .map(|n| n.trim().parse::<u32>().unwrap())
-                .collect::<Vec<u32>>()
+                .map(|n| n.trim().parse::<u64>().unwrap())
+                .collect::<Vec<u64>>()
         })
         .for_each(|v| v.iter().for_each(|n| ns.push(*n)));
 
     ns.into()
 }
 
-fn parse_operation(input: &str) -> Box<dyn Fn(u32) -> u32> {
+fn parse_operation(input: &str) -> Box<dyn Fn(u64) -> u64> {
     let mut split = input.trim().split(" ").skip(4);
     let operator = split.next().expect("no operator for operation");
     let value = split
@@ -64,7 +63,7 @@ fn parse_operation(input: &str) -> Box<dyn Fn(u32) -> u32> {
         return match value {
             "old" => Box::new(|x| x + x),
             _ => {
-                let value = value.parse::<u32>().unwrap();
+                let value = value.parse::<u64>().unwrap();
                 Box::new(move |x| x + value)
             }
         };
@@ -73,7 +72,7 @@ fn parse_operation(input: &str) -> Box<dyn Fn(u32) -> u32> {
     match value {
         "old" => Box::new(|x| x * x),
         _ => {
-            let value = value.parse::<u32>().unwrap();
+            let value = value.parse::<u64>().unwrap();
             Box::new(move |x| x * value)
         }
     }
@@ -133,7 +132,7 @@ pub fn parse_input(input: &str) -> Vec<Monkey> {
 }
 
 #[aoc(day11, part1)]
-pub fn part1(input: &[Monkey]) -> u32 {
+pub fn part1(input: &[Monkey]) -> u64 {
     for _ in 0..20 {
         input.iter().for_each(|monkey| {
             while let Some((monkey_id, item)) = monkey.throw() {
@@ -145,7 +144,7 @@ pub fn part1(input: &[Monkey]) -> u32 {
     let mut inspection_counts = input
         .iter()
         .map(|monkey| *monkey.inspect_count.borrow())
-        .collect::<Vec<u32>>();
+        .collect::<Vec<u64>>();
 
     inspection_counts.sort();
     let last = inspection_counts.len();
@@ -153,36 +152,21 @@ pub fn part1(input: &[Monkey]) -> u32 {
 }
 
 #[aoc(day11, part2)]
-pub fn part2(input: &[Monkey]) -> u32 {
-    let modulo = input.iter().fold(1, |acc, monkey| acc * monkey.div) as u32;
-    println!("modulo to destress is : {modulo}");
-    for i in 0..1000 {
-        input.iter().enumerate().for_each(|(index, monkey)| {
-            println!("ROUND: {}, monkey{index}: ", i + 1);
+pub fn part2(input: &[Monkey]) -> u64 {
+    let modulo = input.iter().fold(1, |acc, monkey| acc * monkey.div) as u64;
+    for _ in 0..10000 {
+        input.iter().for_each(|monkey| {
             while let Some((monkey_id, item)) = monkey.throw_p2() {
                 let destressed = item % modulo;
-                println!("\t\titem={item}, mod={modulo}, destressed={destressed}");
                 input[monkey_id].catch(destressed);
             }
         });
-
-        if
-        /* (i + 1) % 1000 == 0 */
-        i + 1 == 20 || i + 1 == 1000 || i + 1 == 1 {
-            println!("--- ROUND {}", i + 1);
-            for (i2, monkey) in input.iter().enumerate() {
-                println!(
-                    "monkey={i2}, inspected items={}",
-                    monkey.inspect_count.borrow()
-                );
-            }
-        }
     }
 
     let mut inspection_counts = input
         .iter()
         .map(|monkey| *monkey.inspect_count.borrow())
-        .collect::<Vec<u32>>();
+        .collect::<Vec<u64>>();
 
     inspection_counts.sort();
     let last = inspection_counts.len();
