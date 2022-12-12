@@ -9,6 +9,7 @@ pub mod day08;
 pub mod day09;
 pub mod day10;
 pub mod day11;
+pub mod day12;
 
 extern crate aoc_runner;
 
@@ -26,7 +27,7 @@ pub fn part1(input: &str) -> usize {
     0
 }
 
-#[aoc(day2, part2)]
+#[aoc(day1, part2)]
 pub fn part2(input: &str) -> usize {
     0
 }
