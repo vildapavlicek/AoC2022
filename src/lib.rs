@@ -10,6 +10,7 @@ pub mod day09;
 pub mod day10;
 pub mod day11;
 pub mod day12;
+pub mod day13;
 
 extern crate aoc_runner;
 
@@ -24,12 +25,12 @@ aoc_lib! { year = 2022 }
 
 #[aoc(day1, part1)]
 pub fn part1(input: &str) -> usize {
-    0
+    todo!()
 }
 
 #[aoc(day1, part2)]
 pub fn part2(input: &str) -> usize {
-    0
+    todo!()
 }
 
 #[test]

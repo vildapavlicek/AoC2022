@@ -198,15 +198,6 @@ pub fn part2_test() {
     assert_eq!(29, got)
 }
 
-#[cfg(test)]
-const TEST_GRID: [u8; 20] = [
-    //0  1  3  4  5
-    0, 1, 2, 3, 4, // 1
-    5, 6, 7, 8, 9, // 2
-    10, 11, 12, 13, 14, // 3
-    15, 16, 17, 18, 19, // 4
-];
-
 #[test]
 fn test_neighbors() {
     let map = Map {
